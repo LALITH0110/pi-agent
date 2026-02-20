@@ -1,0 +1,49 @@
+{
+  "blocked": [
+    "rm -rf /",
+    "rm -rf /*",
+    "DROP DATABASE",
+    "DROP TABLE",
+    "TRUNCATE",
+    "DELETE FROM",
+    "mkfs",
+    "dd if=",
+    "> /dev/sda",
+    "chmod 777 /",
+    "chown root",
+    "shutdown",
+    "reboot",
+    "halt",
+    "poweroff",
+    "kill -9 1",
+    ":(){ :|:& };:"
+  ],
+  "risky": {
+    "rm -rf": 85,
+    "pip install": 60,
+    "pip3 install": 60,
+    "apt-get install": 70,
+    "apt install": 70,
+    "brew install": 55,
+    "npm install": 55,
+    "curl | bash": 95,
+    "wget | bash": 95,
+    "curl | sh": 95,
+    "wget -O- | sh": 95,
+    "sudo": 65,
+    "su -": 80,
+    "iptables": 75,
+    "ufw": 70,
+    "systemctl stop": 70,
+    "systemctl disable": 75,
+    "crontab -r": 80
+  },
+  "allowed_services": [
+    "nginx",
+    "gunicorn",
+    "uvicorn",
+    "celery",
+    "redis",
+    "postgres"
+  ]
+}

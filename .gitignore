@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# Environment
+.env
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Reports (auto-generated — commit selectively)
+reports/*.png
+reports/*.md
+
+# macOS
+.DS_Store
+
+# Test artefacts
+.pytest_cache/
+htmlcov/
+.coverage
+
+# SQLite dev DB
+dev.db
