@@ -1,0 +1,59 @@
+[
+  {
+    "id": "high-cpu",
+    "name": "High CPU Utilization",
+    "type": "metric",
+    "enabled": true,
+    "params": {
+      "namespace": "AWS/EC2",
+      "metric_name": "CPUUtilization",
+      "dimension_name": "InstanceId",
+      "dimension_value": "i-0abc123456789",
+      "period": 300,
+      "minutes": 10
+    },
+    "condition": {
+      "operator": "gt",
+      "threshold": 85.0,
+      "field": "avg"
+    },
+    "channels": ["slack", "email"],
+    "cooldown_minutes": 30
+  },
+  {
+    "id": "error-keyword",
+    "name": "Application Error Spike",
+    "type": "log_keyword",
+    "enabled": true,
+    "params": {
+      "log_group": "/app/prod",
+      "keyword": "ERROR",
+      "minutes": 15,
+      "limit": 500
+    },
+    "condition": {
+      "operator": "gt",
+      "threshold": 10,
+      "field": "count"
+    },
+    "channels": ["slack"],
+    "cooldown_minutes": 15
+  },
+  {
+    "id": "orders-drop",
+    "name": "Orders Table Row Count Drop",
+    "type": "db_query",
+    "enabled": true,
+    "params": {
+      "sql": "SELECT COUNT(*) AS value FROM orders WHERE created_at > NOW() - INTERVAL '1 hour'",
+      "value_key": "value"
+    },
+    "condition": {
+      "operator": "lt",
+      "threshold": 5,
+      "field": "value"
+    },
+    "channels": ["slack", "webhook"],
+    "cooldown_minutes": 60
+  }
+]

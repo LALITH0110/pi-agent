@@ -5,7 +5,10 @@ main.py — pi-agent entry point
 Usage:
   python main.py --mode sre   "Investigate the 5xx spike from the last 30 minutes."
   python main.py --mode data_ghost
-  python main.py --mode data_ghost --heartbeat   # Run continuously on a schedule
+  python main.py --mode data_ghost --heartbeat          # Run continuously on a schedule
+  python main.py --mode monitor --rules configs/alerts.json
+  python main.py --mode monitor --rules configs/alerts.json --heartbeat
+  python main.py --mode monitor --rules configs/alerts.json --dry-run
 """
 
 from __future__ import annotations
@@ -42,15 +45,26 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument(
         "--mode",
-        choices=["sre", "data_ghost"],
+        choices=["sre", "data_ghost", "monitor"],
         required=True,
-        help="Which agent to run: 'sre' or 'data_ghost'.",
+        help="Which agent to run: 'sre', 'data_ghost', or 'monitor'.",
     )
     parser.add_argument(
         "--heartbeat",
         action="store_true",
         default=False,
-        help="(data_ghost only) Run on a recurring schedule instead of once.",
+        help="Run on a recurring schedule instead of once (data_ghost and monitor modes).",
+    )
+    parser.add_argument(
+        "--rules",
+        default="configs/alerts.json",
+        help="(monitor only) Path to the alert rules JSON config (default: configs/alerts.json).",
+    )
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        default=False,
+        help="(monitor only) Evaluate rules but skip real AWS/DB/notification calls.",
     )
     parser.add_argument(
         "--model",
@@ -122,6 +136,30 @@ def run_data_ghost_heartbeat(task: str | None, model: str, policy: str) -> None:
         hb.stop()
 
 
+def run_monitor_once(rules: str, dry_run: bool) -> None:
+    from src.monitor.monitor_agent import MonitorAgent  # noqa: PLC0415
+
+    logger.info("Starting Monitor agent (one-shot). Rules: %s", rules)
+    agent = MonitorAgent(rules_path=rules, dry_run=dry_run)
+    result = agent.run_cycle()
+    print("\n" + "=" * 60)
+    print("MONITOR CYCLE REPORT")
+    print("=" * 60)
+    print(result)
+
+
+def run_monitor_heartbeat(rules: str, dry_run: bool) -> None:
+    from src.monitor.monitor_heartbeat import MonitorHeartbeat  # noqa: PLC0415
+
+    logger.info("Starting MonitorHeartbeat. Rules: %s", rules)
+    hb = MonitorHeartbeat(rules_path=rules, dry_run=dry_run)
+    try:
+        hb.start(blocking=True)
+    except KeyboardInterrupt:
+        logger.info("MonitorHeartbeat interrupted. Shutting down.")
+        hb.stop()
+
+
 # ---------------------------------------------------------------------------
 # Entry point
 # ---------------------------------------------------------------------------
@@ -141,6 +179,11 @@ def main() -> None:
             run_data_ghost_heartbeat(args.task, args.model, args.policy)
         else:
             run_data_ghost_once(args.task, args.model, args.policy)
+    elif args.mode == "monitor":
+        if args.heartbeat:
+            run_monitor_heartbeat(args.rules, args.dry_run)
+        else:
+            run_monitor_once(args.rules, args.dry_run)
 
 
 if __name__ == "__main__":
